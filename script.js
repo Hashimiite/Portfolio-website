@@ -294,3 +294,133 @@ document.addEventListener('DOMContentLoaded', function() {
         observer.observe(bar);
     });
 });
+
+// Update your sendMail function with this version
+
+function sendMail(e) {
+    // Prevent the default form submission
+    if (e) e.preventDefault();
+    
+    // Get form elements properly
+    const nameInput = document.getElementById("name");
+    const emailInput = document.getElementById("email");
+    const subjectInput = document.getElementById("subject");
+    const messageInput = document.getElementById("message");
+    
+    // Check if all fields have values
+    if (!nameInput.value || !emailInput.value || !subjectInput.value || !messageInput.value) {
+        displayFormMessage("Please fill in all fields", false);
+        return false;
+    }
+    
+    // Get the submit button
+    const submitBtn = document.querySelector(".submit-btn");
+    const originalText = submitBtn.textContent;
+    
+    // Update button state
+    submitBtn.textContent = "Sending...";
+    submitBtn.disabled = true;
+    
+    // Create parameters object with correct property values
+    const params = {
+        from_name: nameInput.value,
+        email: emailInput.value,
+        subject: subjectInput.value,
+        message: messageInput.value,
+        sent_date: new Date().toLocaleString()
+    };
+    
+    // Use EmailJS to send the email
+    emailjs.send("service_eqe1af9", "template_snt4fii", params)
+        .then(function(response) {
+            // Success message
+            displayFormMessage("Message sent successfully! We'll get back to you soon.", true);
+            
+            // Reset form
+            document.getElementById("contactForm").reset();
+            
+            // Reset button
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        })
+        .catch(function(error) {
+            // Error message
+            console.error("Email failed to send:", error);
+            displayFormMessage("Failed to send message. Please try again later.", false);
+            
+            // Reset button
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
+        });
+        
+    return false; // Prevent form submission
+}
+
+// Function to display form success/error messages
+function displayFormMessage(message, isSuccess) {
+    // Remove any existing messages
+    const existingMessage = document.querySelector(".form-message");
+    if (existingMessage) {
+        existingMessage.remove();
+    }
+    
+    // Create message element
+    const messageElement = document.createElement("div");
+    messageElement.className = isSuccess ? "form-message success" : "form-message error";
+    messageElement.textContent = message;
+    
+    // Add message to the form
+    const form = document.getElementById("contactForm");
+    form.appendChild(messageElement);
+    
+    // Scroll to message
+    messageElement.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    
+    // Automatically remove the message after 5 seconds
+    setTimeout(() => {
+        if (messageElement.parentNode) {
+            messageElement.classList.add("fade-out");
+            setTimeout(() => {
+                if (messageElement.parentNode) {
+                    messageElement.remove();
+                }
+            }, 500); // Wait for fade out animation
+        }
+    }, 5000);
+}
+
+// Wait for the DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Add contact form container to reveal elements
+    const contactFormContainer = document.querySelector(".contact-form-container");
+    if (contactFormContainer) {
+        // Update reveal elements
+        const revealElements = document.querySelectorAll('.about-image, .about-text, .project-card, .contact-info, .contact-form-container');
+        
+        // Check for elements in viewport
+        function checkElementsInViewport() {
+            revealElements.forEach(element => {
+                if (element) {
+                    const elementTop = element.getBoundingClientRect().top;
+                    const windowHeight = window.innerHeight;
+                    
+                    if (elementTop < windowHeight - 100) {
+                        element.classList.add('visible');
+                    }
+                }
+            });
+        }
+        
+        // Initial check
+        checkElementsInViewport();
+        
+        // Check on scroll
+        window.addEventListener('scroll', checkElementsInViewport);
+    }
+    
+    // Add event listener to form
+    const contactForm = document.getElementById('contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', sendMail);
+    }
+});
